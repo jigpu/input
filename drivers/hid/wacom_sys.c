@@ -107,8 +107,10 @@ static void wacom_feature_mapping(struct hid_device *hdev,
 	u8 *data;
 	int ret;
 
+	printk("wacom_feature_mapping: id = %d, usage->hid = %08x\n", field->report->id, usage->hid);
 	switch (usage->hid) {
 	case HID_DG_CONTACTMAX:
+		printk("wacom_feature_mapping: Processing HID_DG_CONTACTMAX (current touch_max = %d)\n", features->touch_max);
 		/* leave touch_max as is if predefined */
 		if (!features->touch_max) {
 			/* read manually */
@@ -121,6 +123,7 @@ static void wacom_feature_mapping(struct hid_device *hdev,
 			if (ret == 2)
 				features->touch_max = data[1];
 			kfree(data);
+			printk("wacom_feature_mapping: Updated touch_max to %d\n", features->touch_max);
 		}
 		break;
 	case HID_DG_INPUTMODE:
@@ -175,6 +178,8 @@ static void wacom_usage_mapping(struct hid_device *hdev,
 	struct wacom_features *features = &wacom->wacom_wac.features;
 	bool finger = WACOM_FINGER_FIELD(field);
 	bool pen = WACOM_PEN_FIELD(field);
+
+	printk("wacom_usage_mapping: id = %d, usage->hid = %08x\n", field->report->id, usage->hid);
 
 	/*
 	* Requiring Stylus Usage will ignore boot mouse
@@ -1524,7 +1529,9 @@ static int wacom_probe(struct hid_device *hdev,
 	wacom_set_default_phy(features);
 
 	/* Retrieve the physical and logical size for touch devices */
+	printk("wacom_probe: processing HID descriptor (touch_max = %d)\n", features->touch_max);
 	wacom_retrieve_hid_descriptor(hdev, features);
+	printk("wacom_probe: processing quirks (touch_max = %d)\n", features->touch_max);
 	wacom_setup_device_quirks(wacom);
 
 	if (!features->device_type && features->type != WIRELESS) {
@@ -1589,6 +1596,8 @@ static int wacom_probe(struct hid_device *hdev,
 		if (wacom_wac->features.device_type == BTN_TOOL_FINGER)
 			wacom_wac->shared->touch_input = wacom_wac->input;
 	}
+
+	printk("wacom_probe: probe complete (touch_max = %d)\n", features->touch_max);
 
 	return 0;
 
